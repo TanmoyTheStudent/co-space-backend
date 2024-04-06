@@ -1,6 +1,6 @@
 const mongoose= require("mongoose")
 const {model,Schema}=mongoose
-
+console.log(model)
 const userSchema = new Schema({
     username: String,
     email: String,
