@@ -31,6 +31,4 @@ const Office= model('Office',officeSchema)
 
 module.exports=Office
 
-//How object is created from constructor function. Is property of a new object determined by the constructor function, or only methods?
-//Schema types (https://mongoosejs.com/docs/schematypes.html#uuid)
 
