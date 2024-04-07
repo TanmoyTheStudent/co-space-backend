@@ -16,7 +16,7 @@ const spaceSchema=new Schema({
             option:String,
             price:Number
             }],
-    availableQuantity:Number,
+    totalQuantity:Number,
     bookedQuantity:Number,
     freeAminities:[{type:Schema.Types.ObjectId,ref:'Amenity'}],
     rating:Number
