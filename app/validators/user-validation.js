@@ -44,7 +44,7 @@ const userRegisterSchema ={
         isLength:{
             options:{min:8,max:128},//
             errorMessage:"Password should be between 8-128 characters"
-        }, //isStrongPassword:{},
+        }, 
         trim:true
     },
 
