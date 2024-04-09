@@ -17,6 +17,10 @@ const bookingSchema=new Schema({
         type:Schema.Types.ObjectId,
         ref:'Category'
     },
+     space:{
+        type:Schema.Types.ObjectId,
+        ref:'Space'
+    },
     image:String,
     bookingType:[{
             option:String,
