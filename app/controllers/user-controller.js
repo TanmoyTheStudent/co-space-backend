@@ -20,7 +20,7 @@ userCltrs.register= async(req,res)=>{
          const encryptedPassword = await bcryptjs.hash(user.password, salt)
          user.password=encryptedPassword
         
-         const userCount = await User.countDocuments()
+         const userCount = await User.countDocuments() 
          if (userCount === 0) {
             user.role="admin"    
          } 
@@ -40,7 +40,8 @@ userCltrs.login= async(req,res)=>{
     const errors = validationResult(req)
     if(!errors.isEmpty()){
         return res.status(400).json({ errors: errors.array() })
-    }
+    } //.isEmpty , .array are provided by mongoose
+    console.log(req.body)
     try{
 
         const body= req.body   //es5 feature
@@ -50,14 +51,21 @@ userCltrs.login= async(req,res)=>{
         if(!user){ //to check if the user with email provided is present in the system
             return res.status(404).json({ error:"invalid email/password" })
         }
+
+        console.log(user)
+
         const checkPassword = await bcryptjs.compare(body.password, user.password)
+
+        console.log(checkPassword)
         if(!checkPassword){
+           
             return res.status(404).json({ error: "invalid email/password"})
         }
         const tokenData = {
             id: user._id,
-            role: user.role //Q
+            role: user.role 
         }
+       
         const token= jwt.sign(tokenData, process.env.JWT_SECRET,{ expiresIn: '7d'})
         res.json({token:token})
         //res.json(user)
@@ -74,6 +82,7 @@ userCltrs.login= async(req,res)=>{
 userCltrs.account=async (req,res)=>{
     try{
         const user=await User.findById(req.user.id).select({password:0})
+       
         res.json(user)
 
     }catch(err){
@@ -84,4 +93,5 @@ userCltrs.account=async (req,res)=>{
 }
 
 module.exports=userCltrs
+
 
