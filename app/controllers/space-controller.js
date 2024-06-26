@@ -1,112 +1,107 @@
-const Space= require("../models/space-model")
-const Office= require("../models/office-model")
-const User=require('../models/user-model')
-const Amenity=require("../models/amenity-model")
-const {validationResult}=require("express-validator")
-const spaceCltrs={}
+//install and require jwt //.env file
+const User= require("../models/user-model")
+const bcryptjs = require ("bcryptjs")
+const jwt=require ("jsonwebtoken")
+const { validationResult }= require("express-validator")
+const userCltrs = {}
+const _=require('lodash')
 
-
-//create a space
-spaceCltrs.create=async (req,res) =>{
-    // const errors=validationResult(req)
-    // if(!errors.isEmpty()){
-    //     return res.status(400).json({errors:errors.array()})
-    // }
-    const {body,file}=req
-    
-
-    try{
-        const space= new Space(body)
-        //console.log(space)
-        
-        //image needs to be added separately as it is in req.file, not req.body 
-       
-       // office.image=file.path //for only single image
-        //space.image=file.filename
-
-        await space.save()
-        res.status(201).json(space)
-
-    }catch(err){
-        console.log(err)
-        res.status(500).json({error: "Internal Server error"})
-    }
-}
-
-//show all the spaces
-spaceCltrs.list= async (req,res)=>{
-    try{
-        const spaces= await Space.find().sort({createdAt:-1})
-        res.json(spaces)
-    }catch(err){
-        console.log(err)
-        res.status(500).json({error: "Internal Server error"})
-    }
-}
-
-//show a single space-- public route--anyone can see a specific office details, but if the user wants to book the office he/she has to login
-
-spaceCltrs.show= async (req,res) =>{
-    const id =req.params.id
-    try{
-        const space= await Space.findById(id)
-        res.json(space)
-    }catch(err){
-        console.log(err)
-        res.status(500).json({error: "Internal server error"})
-        //res.status(500).json(err)
-    }
-}
-
-//Show the spaces belong to a particular owner
-spaceCltrs.myspaces= async (req,res)=>{
-    try{
-        const spaces= await Space.find({user:req.user.id}).sort({createdAt:-1})
-        res.json(spaces)
-    }catch(err){
-        console.log(err)
-        res.status(500).json({error: "Internal Server error"})
-    }
-}
-
-//update an space information by the owner
-
-spaceCltrs.update= async (req,res) =>{
-
-    const errors=validationResult(req)
+userCltrs.register= async(req,res)=>{
+    const errors = validationResult(req)
     if(!errors.isEmpty()){
-        return res.status(400).json({errors:errors.array()})
+        return res.status(400).json({ errors: errors.array() })
     }
-    const id= req.params.id
-    const body=req.body
     try{
-        const space=await Space.findOneAndUpdate({ _id:id, user: req.user.id },body,     {new:true})
-        res.json(space)
+
+        const body= req.body   //es5 feature
+         //const {body}=req --destructuring--es6 feature
+
+         const user= new User(body)
+         const salt =await bcryptjs.genSalt()
+         const encryptedPassword = await bcryptjs.hash(user.password, salt)
+         user.password=encryptedPassword
+        //How bcrypt works?
+         const userCount = await User.countDocuments() //analyse countDocument in mongoose
+         if (userCount === 0) {
+            user.role="admin"    
+         } 
+
+        await user.save()
+        res.status(201).json(user)
     }catch(err){
         console.log(err)
-        res.status(500).json({error: "Internal Server error"})
+        res.status(500).json({error: "Internal Server Error"})
     }
+
 }
 
-//delete an space details by the owner or by the admin
-//softdelete option should be there, final delete would be by the admin
-spaceCltrs.delete=async (req,res) =>{
-    const id = req.params.id
-try{   
-    const space= await Space.findOneAndDelete({_id: id, user: req.user.id})
-    res.json(space)
-}catch(err){
-    console.log(err)
-    res.status(500).json({error: "Internal Server error"})
+//login
+
+userCltrs.login= async(req,res)=>{
+    const errors = validationResult(req)
+    if(!errors.isEmpty()){
+        return res.status(400).json({ errors: errors.array() })
+    } //.isEmpty , .array are provided by mongoose
+    console.log(req.body)
+    try{
+
+        const body= req.body   //es5 feature
+         //const {body}=req --destructuring--es6 feature
+
+        const user= await User.findOne({ email: body.email })
+        if(!user){ //to check if the user with email provided is present in the system
+            return res.status(404).json({ error:"invalid email/password" })
+        }
+
+        console.log(user)
+
+        const checkPassword = await bcryptjs.compare(body.password, user.password)
+
+        console.log(checkPassword)
+        if(!checkPassword){
+           
+            return res.status(404).json({ error: "invalid email/password"})
+        }
+        const tokenData = {
+            id: user._id,
+            role: user.role //Q
+        }
+        //Q) How JWT works?
+        const token= jwt.sign(tokenData, process.env.JWT_SECRET,{ expiresIn: '7d'})
+
+        const userInfo=_.pick(user,['username','role'])
+
+        res.json({token:token,userInfo})
+        //res.json(user)
+
+    }catch(err){
+        console.log(err)
+        res.status(500).json({error: "Internal Server Error"})
+    }
+
 }
+
+//account
+
+userCltrs.account=async (req,res)=>{
+    try{
+        const user=await User.findById(req.user.id).select({password:0})
+        /*In Mongoose, when you use the select() method with findById() or find() queries, you can specify which fields to include or exclude from the query results.
+
+        In the expression select({ password: 0 }), { password: 0 } is an object specifying the fields to exclude from the query results. The 0 indicates that the field should be excluded. */
+
+        res.json(user)
+
+    }catch(err){
+        console.log(err)
+        res.status(500).json({error: 'Internal server error'})
+    }
+
 }
 
+module.exports=userCltrs
 
+// If admin changes something like role of an user , but token is still stored in user's localstorage. Now is there any way that the user would be logged out, so that when the user re-login again a new token would be re-generated?
+//JWT vs session-cookies
 
-
-
-module.exports=spaceCltrs
-
-
-
-
+// Differnt status 
