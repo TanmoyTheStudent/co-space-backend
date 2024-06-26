@@ -1,12 +1,16 @@
 const mongoose=require("mongoose")
-const {Schema,model}=mongoose
+const {model,Schema}=mongoose
 
 const amenitySchema= new Schema({
-    title:String,
-    charge:Number
+    amenityName:String,
+    amenityCharge:[{
+        option:String,
+        price:Number
+    }]
+    
 },{timestamps:true})
 
-const Amenity=model("Amenity",amenitySchema)
+const Amenity=model('Amenity',amenitySchema)
 
 module.exports=Amenity
 
