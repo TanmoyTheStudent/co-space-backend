@@ -8,7 +8,14 @@ const officeSchema=new Schema({
         ref:'User'
     },
     title:String,
-    address: String,
+    address: {
+        houseNumber:Number,
+        street:String,
+        postCode:Number,
+        city:String,
+        state:String,
+        country:String
+    },
     location:{
         latitude:Number,
         longitude:Number
@@ -21,6 +28,10 @@ const officeSchema=new Schema({
         type:String,
         default:"available"},
     adminApproval:{
+        type:Boolean,
+        default:false
+    },
+    softDelete:{
         type:Boolean,
         default:false
     }

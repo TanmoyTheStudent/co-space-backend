@@ -4,6 +4,7 @@ const bcryptjs = require ("bcryptjs")
 const jwt=require ("jsonwebtoken")
 const { validationResult }= require("express-validator")
 const userCltrs = {}
+const _=require('lodash')
 
 userCltrs.register= async(req,res)=>{
     const errors = validationResult(req)
@@ -19,8 +20,8 @@ userCltrs.register= async(req,res)=>{
          const salt =await bcryptjs.genSalt()
          const encryptedPassword = await bcryptjs.hash(user.password, salt)
          user.password=encryptedPassword
-        
-         const userCount = await User.countDocuments()
+        //How bcrypt works?
+         const userCount = await User.countDocuments() //analyse countDocument in mongoose
          if (userCount === 0) {
             user.role="admin"    
          } 
@@ -40,7 +41,8 @@ userCltrs.login= async(req,res)=>{
     const errors = validationResult(req)
     if(!errors.isEmpty()){
         return res.status(400).json({ errors: errors.array() })
-    }
+    } //.isEmpty , .array are provided by mongoose
+    console.log(req.body)
     try{
 
         const body= req.body   //es5 feature
@@ -50,16 +52,26 @@ userCltrs.login= async(req,res)=>{
         if(!user){ //to check if the user with email provided is present in the system
             return res.status(404).json({ error:"invalid email/password" })
         }
+
+        console.log(user)
+
         const checkPassword = await bcryptjs.compare(body.password, user.password)
+
+        console.log(checkPassword)
         if(!checkPassword){
+           
             return res.status(404).json({ error: "invalid email/password"})
         }
         const tokenData = {
             id: user._id,
             role: user.role //Q
         }
+        //Q) How JWT works?
         const token= jwt.sign(tokenData, process.env.JWT_SECRET,{ expiresIn: '7d'})
-        res.json({token:token})
+
+        const userInfo=_.pick(user,['username','role'])
+
+        res.json({token:token,userInfo})
         //res.json(user)
 
     }catch(err){
@@ -74,6 +86,10 @@ userCltrs.login= async(req,res)=>{
 userCltrs.account=async (req,res)=>{
     try{
         const user=await User.findById(req.user.id).select({password:0})
+        /*In Mongoose, when you use the select() method with findById() or find() queries, you can specify which fields to include or exclude from the query results.
+
+        In the expression select({ password: 0 }), { password: 0 } is an object specifying the fields to exclude from the query results. The 0 indicates that the field should be excluded. */
+
         res.json(user)
 
     }catch(err){
@@ -85,3 +101,7 @@ userCltrs.account=async (req,res)=>{
 
 module.exports=userCltrs
 
+// If admin changes something like role of an user , but token is still stored in user's localstorage. Now is there any way that the user would be logged out, so that when the user re-login again a new token would be re-generated?
+//JWT vs session-cookies
+
+// Differnt status 

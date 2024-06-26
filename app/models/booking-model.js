@@ -1,5 +1,4 @@
 const mongoose=require("mongoose")
-const User = require("./user-model")
 const {model,Schema}=mongoose
 
 const bookingSchema=new Schema({
@@ -11,20 +10,31 @@ const bookingSchema=new Schema({
     office: {
         type:Schema.Types.ObjectId,
         ref:'Office'
+    },//array of offices
+    // spaces:[{
+    //     space:{type:Schema.Types.ObjectId,ref:'Space'},
+    //     bookingQuantity:Number,
+    //     price:Number,
+    //     bookingType:String,//options
+    //     bookingTime:{starting:Date,
+    //         ending:Date}
+    // }],
+    space:{
+        type:Schema.Types.ObjectId,ref:'Space'
     },
-    
-    category: {
-        type:Schema.Types.ObjectId,
-        ref:'Category'
+    bookType:String,
+    price:Number,
+    bookingTime:{
+        starting:Date,
+        ending:Date
     },
-    image:String,
-    bookingType:[{
-            option:String,
-            price:Number
-            }],
-    available:Number,
-    freeAminities:[{type:Schema.Types.ObjectId,ref:'Amenity'}],
-    rating:Number
+    quantity:Number,
+    extraAmenities:[{type:Schema.Types.ObjectId,ref:'Amenity'}],
+    totalAmount:Number,
+    status:{
+        type:String,
+        default:"Pending"
+    }
     
 })
 

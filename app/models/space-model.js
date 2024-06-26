@@ -11,15 +11,36 @@ const spaceSchema=new Schema({
         type:Schema.Types.ObjectId,
         ref:'Category'
     },
-    image:String,
+    //category: String,
+    
     bookingType:[{
             option:String,
             price:Number
             }],
-    availableQuantity:Number,
-    bookedQuantity:Number,
-    freeAminities:[{type:Schema.Types.ObjectId,ref:'Amenity'}],
-    rating:Number
+            
+    totalQuantity:Number,
+    //bookedQuantity:Number,
+    freeAmenities:[{type:Schema.Types.ObjectId,ref:'Amenity'}],
+    paidAmenities:[{
+        amenity:Schema.Types.ObjectId,
+        amenityName:String,
+        dailyPrice:Number,
+        weeklyPrice:Number,
+        monthlyPrice:Number
+    }],
+    booking:[{
+        id:Schema.Types.ObjectId,
+        quantity:Number,
+        startingTime:Date,
+        endingTime:Date,
+        status:String
+
+    }],
+    image:String,
+    avgRating:{
+        type:Number,
+        default:0
+    }
     
 })
 
